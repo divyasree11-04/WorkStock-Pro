@@ -1,0 +1,22 @@
+
+.app-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.content-area {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px; /* Limits width on ultra-wide monitors but keeps it centered */
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Fix for your Navbar to ensure it spans 100% */
+.navbar {
+  width: 100%;
+  box-sizing: border-box;
+}

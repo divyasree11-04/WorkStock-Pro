@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+
+  ems-frontend:
+    build:
+      context: /home/ubuntu/ems/frontend      # ← full path
+    container_name: ems-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend-network
+
+  workstock-frontend:
+    build:
+      context: /home/ubuntu/workstock-pro/frontend   # ← full path
+    container_name: workstock-frontend
+    restart: always
+    ports:
+      - "3001:80"
+    env_file:
+      - /home/ubuntu/workstock-pro/frontend/.env
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge

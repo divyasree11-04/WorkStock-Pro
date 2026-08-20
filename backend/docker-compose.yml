@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+
+  workstock-backend:
+    build:
+      context: /home/ubuntu/workstock-pro/backend    # ← full path
+    container_name: workstock-backend
+    restart: always
+    ports:
+      - "5001:5001"
+    env_file:
+      - /home/ubuntu/workstock-pro/backend/.env
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge

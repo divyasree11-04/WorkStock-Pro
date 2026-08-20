@@ -1,0 +1,309 @@
+/* WithdrawWorkflow.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+
+:root {
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --bg-dark: #ffffff;
+  --card-bg: #ffffff;
+  --border-light: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --success: #10b981;
+  --warning: #f59e0b;
+}
+
+
+.ww-container {
+  padding: 40px 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-main);
+}
+
+
+/* --- Header Section --- */
+.ww-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  gap: 20px;
+}
+
+.ww-hdr h2 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.ww-hdr-right {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-scan {
+  padding: 12px 24px;
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-scan:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+}
+
+.ww-search {
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-light);
+  width: 280px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.ww-search:focus {
+  border-color: var(--bg-dark);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05);
+}
+
+/* --- Product Cards --- */
+.ww-row {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  margin-bottom: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.ww-row:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.ww-row.low { border-left: 6px solid var(--warning); }
+.ww-row.out { border-left: 6px solid var(--primary); opacity: 0.8; }
+.ww-row.open { border-color: var(--primary); }
+
+.ww-row-top {
+  display: flex;
+  padding: 24px;
+  gap: 24px;
+  align-items: center;
+}
+
+.ww-info { flex: 1; }
+.ww-name { margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #0f172a; }
+.ww-desc { margin: 0 0 12px; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+
+.ww-stock {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ww-stock.g { color: var(--success); }
+.ww-stock.o { color: var(--warning); }
+.ww-stock.r { color: var(--primary); }
+
+.ww-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 18px;
+  background: #f8fafc;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* Optimized Compact Button */
+.btn-wd {
+  padding: 6px 14px;            /* Reduced vertical and horizontal padding */
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;           /* Slightly tighter corners */
+  font-weight: 700;
+  font-size: 13px;              /* Smaller font for a cleaner look */
+  cursor: pointer;
+  width: fit-content;           /* Prevents the button from stretching */
+  display: inline-flex;         /* Ensures it only takes required space */
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.btn-wd:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-wd:active {
+  transform: translateY(0);
+}
+
+.btn-wd:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.ww-qr-wrap {
+  background: #fff;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.ww-qr-wrap p { margin: 8px 0 0; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; }
+
+/* --- Detail Overlay (CEO Impression Piece) --- */
+.ww-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ww-detail-panel {
+  background: var(--bg-dark);
+  color: var(--text-main);
+  border-radius: 24px;
+  padding: 32px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light);
+}
+
+.ww-panel-name { font-size: 24px; font-weight: 800; margin-bottom: 4px; color: var(--text-main); }
+.ww-sku { color: var(--primary); font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; }
+
+.ww-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.ww-field {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+}
+
+.ww-field label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block; }
+
+.ww-stock-box {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid var(--border-light);
+}
+
+.ww-stock-num { font-size: 56px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+
+/* --- Forms & Inputs --- */
+.ww-pinput {
+  background: #fff;
+  border: 1.5px solid var(--border-light);
+  color: var(--text-main);
+  padding: 14px;
+  border-radius: 12px;
+  width: 100%;
+  font-size: 16px;
+  margin-top: 8px;
+  box-sizing: border-box;
+}
+
+.btn-big-wd {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.btn-big-wd:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
+/* History Items */
+.ww-hist-item {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+}
+
+.ww-panel-close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 20px;
+  transition: transform 0.2s;
+}
+.ww-panel-close:hover { transform: scale(1.1); }
+
+.ww-form-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .ww-hdr { flex-direction: column; align-items: flex-start; }
+  .ww-hdr-right { width: 100%; flex-direction: column; }
+  .btn-scan, .ww-search { width: 100%; }
+  
+  .ww-row-top { flex-direction: column; padding: 20px; }
+  .ww-qr-wrap { width: 100%; }
+  
+  .ww-detail-panel { padding: 24px; border-radius: 0; max-height: 100vh; height: 100%; }
+  .ww-grid2 { grid-template-columns: 1fr; }
+  .ww-stock-num { font-size: 40px; }
+}
