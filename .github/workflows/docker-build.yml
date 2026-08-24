@@ -1,9 +1,4 @@
 name: Build and Push Images
-
-on:
-  push:
-    branches: [testing]
-name: Build and Push Images
 on:
   push:
     branches: [testing]
