@@ -3,11 +3,13 @@ name: Build and Push Images
 on:
   push:
     branches: [testing]
-
+name: Build and Push Images
+on:
+  push:
+    branches: [testing]
 permissions:
   contents: read
   packages: write
-
 jobs:
   build-backend:
     runs-on: ubuntu-latest
@@ -23,3 +25,18 @@ jobs:
           context: ./backend
           push: true
           tags: ghcr.io/divyasree11-04/workstock-backend:latest
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/divyasree11-04/workstock-frontend:latest
