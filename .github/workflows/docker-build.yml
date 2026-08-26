@@ -26,7 +26,7 @@ jobs:
           push: true
           tags: ghcr.io/divyasree11-04/workstock-backend:latest
 
-  build-frontend:
+    build-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,3 +40,7 @@ jobs:
           context: ./frontend
           push: true
           tags: ghcr.io/divyasree11-04/workstock-frontend:latest
+          build-args: |
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+            VITE_EMS_URL=${{ vars.VITE_EMS_URL }}
+            VITE_LOGO_URL=${{ vars.VITE_LOGO_URL }}
