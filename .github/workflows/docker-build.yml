@@ -1,9 +1,4 @@
 name: Build and Push Images
-
-on:
-  push:
-    branches: [testing]
-name: Build and Push Images
 on:
   push:
     branches: [testing]
@@ -25,8 +20,7 @@ jobs:
           context: ./backend
           push: true
           tags: ghcr.io/divyasree11-04/workstock-backend:latest
-
-    build-frontend:
+  build-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
