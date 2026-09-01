@@ -39,12 +39,31 @@ export default function AddProduct() {
   const debounceRef  = useRef(null);
 
   const [form,          setForm]          = useState(emptyForm);
-  const [previewCode,   setPreviewCode]   = useState("UAVTSA???");
+  const [previewCode,   setPreviewCode]   = useState("UTPLE001");
   const [previewLoading,setPreviewLoading]= useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
   const [submitted,     setSubmitted]     = useState(false);
 
+  const fetchPreview = useCallback(async () => {
+    setPreviewLoading(true);
+    try {
+      const res = await api.get("/products/next-item-code");
+      setPreviewCode(res.data?.item_code || "UTPLE001");
+    } catch (err) {
+      console.error("[AddProduct] next-item-code preview failed:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        url: err.config?.url,
+        message: err.message,
+      });
+      setPreviewCode("UTPLE001");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    fetchPreview();
     const token = localStorage.getItem("token");
     if (token) {
       const decoded = parseJwt(token);
@@ -56,48 +75,11 @@ export default function AddProduct() {
         if (incharge) setForm(f => ({ ...f, incharge }));
       }
     }
-  }, []);
+  }, [fetchPreview]);
 
- 
-  const fetchPreview = useCallback(async (item_name) => {
-    if (!item_name.trim()) {
-      setPreviewCode("UAVTSA???");
-      return;
-    }
-    setPreviewLoading(true);
-    try {
-      const res = await api.get("/products/next-item-code");
-      setPreviewCode(res.data?.item_code || "UAVTSA???");
-    } catch (err) {
-      
-      console.error("[AddProduct] next-item-code preview failed:", {
-        status: err.response?.status,
-        data: err.response?.data,
-        url: err.config?.url,
-        message: err.message,
-      });
-      
-      setPreviewCode("UAVTSA???");
-    } finally {
-      setPreviewLoading(false);
-    }
-  }, []);
-
-  const schedulePreview = (item_name) => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(
-      () => fetchPreview(item_name),
-      400
-    );
-  };
-
-  
   const set = (e) => {
     const { name, value } = e.target;
-    const nextItemName = name === "item_name" ? value : form.item_name;
-
     setForm((f) => ({ ...f, [name]: value }));
-    schedulePreview(nextItemName);
   };
 
 
@@ -171,9 +153,9 @@ export default function AddProduct() {
   const handleReset = () => {
     const fresh = { ...emptyForm() };
     setForm(fresh);
-    setPreviewCode("UAV???001");
     setGeneratedCode("");
     setSubmitted(false);
+    fetchPreview();
 
     const token = localStorage.getItem("token");
     if (token) {
@@ -275,7 +257,7 @@ export default function AddProduct() {
                   autoFocus
                 />
                 <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 4, display: "block" }}>
-                  Item code is auto-generated as a fixed sequence (UAVTSA001, UAVTSA002, …)
+                  Item code is auto-generated based on user role (UTPLS for Super Admin, UTPLA for Admin, UTPLE for Employee)
                 </span>
               </div>
 

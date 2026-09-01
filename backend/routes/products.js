@@ -21,32 +21,46 @@ router.use((req, res, next) => {
 const upload = multer({ dest: "uploads/" });
 
 
-const ITEM_CODE_PREFIX = "UAVTSA";
+async function getPrefixForUser(user) {
+  let role = user?.role;
+  if (!role && user?.id) {
+    try {
+      const uRes = await pool.query("SELECT role FROM employees WHERE employee_id = $1", [user.id]);
+      if (uRes.rows.length > 0) role = uRes.rows[0].role;
+    } catch (e) {
+      // ignore lookup error
+    }
+  }
+  const norm = (role || "").toLowerCase().replace(/[^a-z]/g, "");
+  if (norm === "superadmin") return "UTPLS";
+  if (norm === "admin" || norm === "hradmin") return "UTPLA";
+  return "UTPLE";
+}
 
-async function generateItemCode() {
+async function generateItemCode(prefix = "UTPLE") {
   const res = await pool.query(
     `SELECT item_code FROM products WHERE item_code LIKE $1 ORDER BY item_code DESC LIMIT 1`,
-    [`${ITEM_CODE_PREFIX}%`]
+    [`${prefix}%`]
   );
 
   let seq = 1;
   if (res.rows.length > 0) {
     const last = res.rows[0].item_code;
-    const numPart = parseInt(last.slice(ITEM_CODE_PREFIX.length), 10);
+    const numPart = parseInt(last.slice(prefix.length), 10);
     if (!isNaN(numPart)) seq = numPart + 1;
   }
-  return `${ITEM_CODE_PREFIX}${String(seq).padStart(3, "0")}`;
+  return `${prefix}${String(seq).padStart(3, "0")}`;
 }
 
 
 router.get("/next-item-code", verifyToken, async (req, res, next) => {
   try {
-    
     res.set("Cache-Control", "no-store, no-cache, must-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
 
-    const code = await generateItemCode();
+    const prefix = await getPrefixForUser(req.user);
+    const code = await generateItemCode(prefix);
     res.json({ item_code: code });
   } catch (err) { next(err); }
 });
@@ -207,6 +221,12 @@ router.post(
       }
 
       
+      let finalItemCode = item_code;
+      if (!finalItemCode || finalItemCode.includes("?")) {
+        const prefix = await getPrefixForUser(req.user);
+        finalItemCode = await generateItemCode(prefix);
+      }
+
       const result = await pool.query(
         `INSERT INTO products (
           item_name, description, quantity, unit, make, incharge,
@@ -233,7 +253,7 @@ router.post(
           rack || null,
           lead_time || null,
           parseNum(unit_price, 0),
-          item_code || null,
+          finalItemCode,
           category || null,
           sde || null,
           fsn || null,

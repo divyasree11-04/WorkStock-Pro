@@ -12,7 +12,7 @@ async function seed() {
       await pool.query(
         `INSERT INTO employees (name, email, password, role, employee_id_code) 
          VALUES ($1, $2, $3, $4, $5)`,
-        ['Admin User', 'admin@uavtech.ai', 'admin123', 'admin', 'UAVA001']
+        ['Admin User', 'admin@uavtech.ai', 'admin123', 'admin', 'UTPLA001']
       );
       console.log("Default admin created: admin@uavtech.ai / admin123");
     } else {
@@ -26,7 +26,7 @@ async function seed() {
       const empResult = await pool.query(
         `INSERT INTO employees (name, email, password, role, employee_id_code) 
          VALUES ($1, $2, $3, $4, $5) RETURNING employee_id`,
-        ['John Doe', 'employee@uavtech.ai', 'user123', 'employee', 'UAVE001']
+        ['John Doe', 'employee@uavtech.ai', 'user123', 'employee', 'UTPLE001']
       );
       console.log("Default employee created: employee@uavtech.ai / user123");
 
