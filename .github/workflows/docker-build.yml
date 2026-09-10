@@ -2,6 +2,7 @@ name: Build and Push Images
 on:
   push:
     branches: [testing]
+  workflow_dispatch:
 permissions:
   contents: read
   packages: write
