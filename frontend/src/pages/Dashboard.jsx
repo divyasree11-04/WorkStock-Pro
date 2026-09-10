@@ -32,7 +32,7 @@ export default function Dashboard() {
     ])
       .then(([dashRes, prodRes]) => {
         setData(dashRes.data);
-        setAllProducts(prodRes.data);
+        setAllProducts(Array.isArray(prodRes.data) ? prodRes.data : []);
         setLoading(false);
       })
       .catch(err => {
@@ -41,13 +41,13 @@ export default function Dashboard() {
       });
   }, []);
 
-  
+
   const warrantyAlerts = (Array.isArray(allProducts) ? allProducts : [])
     .filter(p => !!p.warranty_expiry)
     .map(p => {
       const diffDays = Math.ceil((new Date(p.warranty_expiry) - new Date()) / (1000 * 60 * 60 * 24));
-      const absDays  = Math.abs(diffDays);
-      const timeStr  = absDays < 60
+      const absDays = Math.abs(diffDays);
+      const timeStr = absDays < 60
         ? `${absDays} day${absDays !== 1 ? 's' : ''}`
         : `${Math.round(absDays / 30)} month${Math.round(absDays / 30) !== 1 ? 's' : ''}`;
       let pillColor, pillBg, pillLabel, message;
@@ -72,15 +72,15 @@ export default function Dashboard() {
     .sort((a, b) => a.days_left - b.days_left);
 
   const criticalCount = (Array.isArray(data.lowStock) ? data.lowStock : []).filter(i => parseFloat(i.quantity) <= 2).length;
-  const lowCount      = (Array.isArray(data.lowStock) ? data.lowStock : []).filter(i => parseFloat(i.quantity) > 2).length;
+  const lowCount = (Array.isArray(data.lowStock) ? data.lowStock : []).filter(i => parseFloat(i.quantity) > 2).length;
 
   const [stockFilter, setStockFilter] = useState(null);
   const toggleFilter = (f) => setStockFilter(prev => prev === f ? null : f);
   const visibleStock = stockFilter === "critical"
     ? (Array.isArray(data.lowStock) ? data.lowStock : []).filter(i => parseFloat(i.quantity) <= 2)
     : stockFilter === "low"
-    ? (Array.isArray(data.lowStock) ? data.lowStock : []).filter(i => parseFloat(i.quantity) > 2)
-    : (Array.isArray(data.lowStock) ? data.lowStock : []);
+      ? (Array.isArray(data.lowStock) ? data.lowStock : []).filter(i => parseFloat(i.quantity) > 2)
+      : (Array.isArray(data.lowStock) ? data.lowStock : []);
 
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [admins, setAdmins] = useState([]);
@@ -148,12 +148,12 @@ export default function Dashboard() {
 
 
   const quickActions = [
-    { icon: "IN",   title: "Master List",       sub: "Record incoming items",  route: "/products",       color: "#f0fdf4", accent: "#16a34a", feature: "sms_master_list" },
-   /*Withdrw*/ { icon: "OUT",  title: "Inventory Release",        sub: "Issue items from store", route: "/withdraw",       color: "#eff6ff", accent: "#1d4ed8", feature: "sms_withdrawal" },
-    { icon: "RET",  title: "Deposit",          sub: "Return items to store",  route: "/return",         color: "#fff7ed", accent: "#ea580c", feature: "sms_withdrawal" },
-    { icon: "ADD",  title: "Stock In",     sub: "Register new item",      route: "/add-product",    color: "#fffbeb", accent: "#b45309", feature: "sms_stock_in" },
-    { icon: "LOG",  title: "All History",     sub: "View issue records",     route: "/my-withdrawals", color: "#fff1f2", accent: "#be123c", feature: "sms_reports" },
-    { icon: "RPT",  title: "Export Report",   sub: "Download CSV/Excel",     route: "#reports",        color: "#f0fdfa", accent: "#0d9488", feature: "sms_reports" },
+    { icon: "IN", title: "Master List", sub: "Record incoming items", route: "/products", color: "#f0fdf4", accent: "#16a34a", feature: "sms_master_list" },
+   /*Withdrw*/ { icon: "OUT", title: "Inventory Release", sub: "Issue items from store", route: "/withdraw", color: "#eff6ff", accent: "#1d4ed8", feature: "sms_withdrawal" },
+    { icon: "RET", title: "Deposit", sub: "Return items to store", route: "/return", color: "#fff7ed", accent: "#ea580c", feature: "sms_withdrawal" },
+    { icon: "ADD", title: "Stock In", sub: "Register new item", route: "/add-product", color: "#fffbeb", accent: "#b45309", feature: "sms_stock_in" },
+    { icon: "LOG", title: "All History", sub: "View issue records", route: "/my-withdrawals", color: "#fff1f2", accent: "#be123c", feature: "sms_reports" },
+    { icon: "RPT", title: "Export Report", sub: "Download CSV/Excel", route: "#reports", color: "#f0fdfa", accent: "#0d9488", feature: "sms_reports" },
   ];
 
   const actions = quickActions.filter(qa => !qa.route.startsWith("#") && (!qa.feature || hasSmsPermission(qa.feature)));
@@ -164,24 +164,24 @@ export default function Dashboard() {
   const exportReport = async (type) => {
     try {
       setExporting(true);
-      const response = await api.get(`/reports/export?type=${type}`, { 
-        responseType: 'blob' 
+      const response = await api.get(`/reports/export?type=${type}`, {
+        responseType: 'blob'
       });
-      
-      const blob = new Blob([response.data], { 
-        type: response.headers['content-type'] 
+
+      const blob = new Blob([response.data], {
+        type: response.headers['content-type']
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       const contentDisposition = response.headers['content-disposition'];
-      let filename = `report_${new Date().toISOString().slice(0,10)}.${type === 'excel' ? 'xls' : type}`;
+      let filename = `report_${new Date().toISOString().slice(0, 10)}.${type === 'excel' ? 'xls' : type}`;
       if (contentDisposition) {
         const match = contentDisposition.match(/filename=(.+)/);
         if (match) filename = match[1];
       }
-      
+
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
@@ -206,7 +206,7 @@ export default function Dashboard() {
     <div className="db-error-screen">
       <div className="db-error-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="32" height="32">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </div>
       <p>{error}</p>
@@ -222,23 +222,23 @@ export default function Dashboard() {
         <div className="db-hero-left">
           <p className="db-hero-date">{today}</p>
           <h1 className="db-hero-title">Inventory Control</h1>
-      
+
         </div>
       </div>
 
       <div className="db-kpi-strip">
         {[
-          { icon: "box",   val: data.totalItems || 0,                                         lbl: "Total Products", badge: "Inventory", cls: "db-kpi-blue"  },
-          { icon: "chart", val: data.totalQuantity || 0,                                      lbl: "Total Units",    badge: "Quantity",  cls: "db-kpi-green" },
-          { icon: "money", val: `₹${Number(data.totalValue || 0).toLocaleString("en-IN")}`,   lbl: "Total Value", badge: "Value",     cls: "db-kpi-amber" },
-          { icon: "warn",  val: (Array.isArray(data.lowStock) ? data.lowStock : []).length,                                 lbl: "Low Stock Items",badge: "Alerts",    cls: "db-kpi-red"   },
+          { icon: "box", val: data.totalItems || 0, lbl: "Total Products", badge: "Inventory", cls: "db-kpi-blue" },
+          { icon: "chart", val: data.totalQuantity || 0, lbl: "Total Units", badge: "Quantity", cls: "db-kpi-green" },
+          { icon: "money", val: `₹${Number(data.totalValue || 0).toLocaleString("en-IN")}`, lbl: "Total Value", badge: "Value", cls: "db-kpi-amber" },
+          { icon: "warn", val: (Array.isArray(data.lowStock) ? data.lowStock : []).length, lbl: "Low Stock Items", badge: "Alerts", cls: "db-kpi-red" },
         ].map((k, i) => (
           <div key={i} className={`db-kpi-card ${k.cls}`}>
             <div className="db-kpi-icon">
-              {k.icon === "box"   && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>}
-              {k.icon === "chart" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>}
-              {k.icon === "money" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><path d="M6 3h12M6 8h12M14.5 8c0 3.5-3 6-6.5 6h-.5l7 7"/></svg>}
-              {k.icon === "warn"  && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+              {k.icon === "box" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" /></svg>}
+              {k.icon === "chart" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>}
+              {k.icon === "money" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><path d="M6 3h12M6 8h12M14.5 8c0 3.5-3 6-6.5 6h-.5l7 7" /></svg>}
+              {k.icon === "warn" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>}
             </div>
             <div className="db-kpi-body">
               <div className="db-kpi-val">{k.val}</div>
@@ -261,7 +261,7 @@ export default function Dashboard() {
             className={`db-pill db-pill-amber${stockFilter === "low" ? " db-pill-active" : ""}`}
             onClick={() => toggleFilter("low")}
           >{lowCount} Low</span>
-        
+
         </div>
       </div>
 
@@ -270,8 +270,8 @@ export default function Dashboard() {
         <div className="db-oos-alert">
           <div className="db-oos-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
           <div className="db-oos-body">
@@ -323,8 +323,8 @@ export default function Dashboard() {
                   }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
                   </svg>
                   Send Alert
                 </button>
@@ -385,14 +385,14 @@ export default function Dashboard() {
                   <div className="db-action-title">{qa.title}</div>
                   <div className="db-action-sub">{qa.sub}</div>
                 </div>
-                {}
+                { }
               </div>
             ))}
           </div>
 
           {exportAction && (
-            <div 
-              className="db-action-card db-export-card" 
+            <div
+              className="db-action-card db-export-card"
               style={{ "--accent": exportAction.accent, "--bg": exportAction.color }}
             >
               <div className="db-export-card-content">
@@ -404,7 +404,7 @@ export default function Dashboard() {
                   <div className="db-action-sub">{exportAction.sub}</div>
                 </div>
               </div>
-              
+
               <div className="db-export-row">
                 <button className="db-export-btn" onClick={() => exportReport("csv")} disabled={exporting}>
                   {exporting ? "..." : "Export CSV"}
@@ -458,14 +458,14 @@ export default function Dashboard() {
                     onClick={() => navigate(`/products/${m.id}`)}
                     style={{ cursor: 'pointer', borderLeft: `3px solid ${m.pillColor}`, paddingLeft: '10px' }}
                     onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-                    onMouseOut={e  => e.currentTarget.style.background = 'transparent'}
+                    onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <div className="db-low-info" style={{ flex: 1 }}>
                       <div className="db-low-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                         {m.item_name}
                         <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" width="11" height="11">
-                          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                          <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
                         </svg>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '3px' }}>
@@ -533,7 +533,7 @@ export default function Dashboard() {
                 <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>Send Low Stock Alerts</h3>
                 <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#64748b" }}>Notify admins and team members about depleted items</p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowAlertModal(false)}
                 style={{
                   background: "none",
@@ -560,7 +560,7 @@ export default function Dashboard() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", maxHeight: "150px", overflowY: "auto" }}>
                     {admins.map(admin => (
                       <label key={admin.employee_id} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: "#334155", cursor: "pointer" }}>
-                        <input 
+                        <input
                           type="checkbox"
                           checked={selectedAdmins.includes(admin.email)}
                           onChange={(e) => {
@@ -585,7 +585,7 @@ export default function Dashboard() {
                 <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
                   Additional Email
                 </label>
-                <input 
+                <input
                   type="email"
                   placeholder="Enter custom email address (optional)"
                   value={customEmail}
@@ -602,7 +602,7 @@ export default function Dashboard() {
                 />
               </div>
 
-              
+
               <div>
                 <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
                   Select Low Stock Items to Include
@@ -614,7 +614,7 @@ export default function Dashboard() {
                     return (
                       <label key={item.id} style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "space-between", fontSize: "14px", color: "#334155", cursor: "pointer" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <input 
+                          <input
                             type="checkbox"
                             checked={selectedItems.includes(item.id)}
                             onChange={(e) => {
@@ -669,7 +669,7 @@ export default function Dashboard() {
               justifyContent: "flex-end",
               gap: "12px"
             }}>
-              <button 
+              <button
                 onClick={() => setShowAlertModal(false)}
                 disabled={sendingAlert}
                 style={{
@@ -683,7 +683,7 @@ export default function Dashboard() {
                   cursor: "pointer"
                 }}
               >Cancel</button>
-              <button 
+              <button
                 onClick={handleSendAlert}
                 disabled={sendingAlert}
                 style={{

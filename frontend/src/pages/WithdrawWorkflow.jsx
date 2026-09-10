@@ -77,25 +77,16 @@ export default function WithdrawWorkflow() {
 
 
   const fetchProducts = async () => {
-
     setLoading(true);
-
     try {
-
       const res = await api.get("/products");
-
-      setProducts(res.data);
-
+      const dataList = Array.isArray(res.data) ? res.data : [];
+      setProducts(dataList);
       const init = {};
-
-      res.data.forEach(p => { init[p.id] = { amount: "", condition: "Good", category: "Expendable", msg: null, saving: false }; });
-
+      dataList.forEach(p => { init[p.id] = { amount: "", condition: "Good", category: "Expendable", msg: null, saving: false }; });
       setRowForm(init);
-
-    } catch (err) { console.error(err); }
-
+    } catch (err) { console.error(err); setProducts([]); }
     finally { setLoading(false); }
-
   };
 
 
@@ -137,7 +128,9 @@ export default function WithdrawWorkflow() {
 
       ]);
 
-      setPanel(pR.data); setPanelHistory(hR.data); setPanelBatches(bR.data || []);
+      setPanel(pR.data);
+      setPanelHistory(Array.isArray(hR.data) ? hR.data : []);
+      setPanelBatches(Array.isArray(bR.data) ? bR.data : []);
 
     } catch { alert("Product not found."); }
 
@@ -256,9 +249,9 @@ export default function WithdrawWorkflow() {
 
       });
 
-      setPanel(p => ({ 
+      setPanel(p => ({
 
-        ...p, 
+        ...p,
 
         quantity: parseFloat(p.quantity) - qty,
 
@@ -271,52 +264,29 @@ export default function WithdrawWorkflow() {
       setPanelForm(prev => ({ ...prev, amount: "" }));
 
       const h = await api.get(`/reports/transactions/${panel.id}`);
-
-      setPanelHistory(h.data); fetchProducts();
-
+      setPanelHistory(Array.isArray(h.data) ? h.data : []); fetchProducts();
     } catch (err) { setPanelMsg({ type: "err", text: err.response?.data?.message || "Error processing withdrawal." }); }
-
     finally { setPanelSaving(false); }
-
   };
-
-
 
   const toggleRow = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
-
   const setRF = (id, f, v) => setRowForm(prev => ({ ...prev, [id]: { ...prev[id], [f]: v } }));
 
-
-
   const handleRowWithdraw = async (product) => {
-
     const f = rowForm[product.id];
-
     const qty = parseFloat(f.amount);
-
     if (!qty || qty <= 0) return;
-
     setRF(product.id, "saving", true);
-
     try {
-
       await api.post("/stock-out", { productId: product.id, quantity: qty, condition: f.condition, item_category: f.category });
-
-      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, quantity: parseFloat(p.quantity) - qty } : p));
-
+      setProducts(prev => (Array.isArray(prev) ? prev : []).map(p => p.id === product.id ? { ...p, quantity: parseFloat(p.quantity) - qty } : p));
       setRF(product.id, "msg", { type: "ok", text: "Withdrawn!" });
-
       setTimeout(() => { setExpanded(prev => ({ ...prev, [product.id]: false })); fetchProducts(); }, 1500);
-
     } catch (err) { setRF(product.id, "msg", { type: "err", text: err.response?.data?.message || "Failed" }); }
-
     finally { setRF(product.id, "saving", false); }
-
   };
 
-
-
-  const filtered = products.filter(p => p.item_name?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = (Array.isArray(products) ? products : []).filter(p => p.item_name?.toLowerCase().includes(search.toLowerCase()));
 
   const scClass = (qty) => { const q = parseFloat(qty); if (q <= 0) return "r"; if (q <= 5) return "o"; return "g"; };
 
@@ -364,7 +334,7 @@ export default function WithdrawWorkflow() {
 
         <div className="ww-hdr-right">
 
-          
+
 
           <input className="ww-search" type="text" placeholder="Search inventory..." value={search} onChange={e => setSearch(e.target.value)} />
 
@@ -590,267 +560,267 @@ export default function WithdrawWorkflow() {
 
 
 
-                           {/* Form fields */}
-
-                 {panel.is_machine && (panel.net_out || 0) > 0 && (
-
-                   <div style={{
-
-                     background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 10,
-
-                     padding: '12px 16px', color: '#dc2626', fontWeight: 600, fontSize: 13,
-
-                     marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8
-
-                   }}>
-
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-
-                     Return existing tool first ({panel.net_out} unit{(panel.net_out > 1) ? 's' : ''} outstanding)
-
-                   </div>
-
-                 )}
-
-
-
-                 <div style={{ marginBottom: 12 }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0fdf4', padding: '8px 12px', borderRadius: 8, border: '1px solid #bbf7d0', cursor: 'pointer' }}
-                     onClick={() => setPanelForm(f => ({ ...f, showFifo: !f.showFifo, batch_id: "" }))}>
-                     <input
-                       type="checkbox"
-                       id="showFifoBatches"
-                       checked={!!panelForm.showFifo}
-                       onChange={() => {}}
-                       style={{ cursor: 'pointer', width: 15, height: 15, accentColor: '#15803d' }}
-                     />
-                     <label htmlFor="showFifoBatches" style={{ fontSize: 13, fontWeight: 600, color: '#15803d', cursor: 'pointer', margin: 0 }}>
-                       Auto-select Batch
-                     </label>
-                   </div>
-
-                   {!panelForm.showFifo && (() => {
-                     const activeBatches = [...panelBatches]
-                       .filter(b => parseFloat(b.remaining_qty) > 0)
-                       .sort((a, b) => new Date(a.in_date) - new Date(b.in_date));
-                     return (
-                       <div style={{ marginTop: 8 }}>
-                         <label style={labelStyle}>Select Batch</label>
-                         {activeBatches.length === 0 ? (
-                           <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 4px' }}>No active batches found.</p>
-                         ) : (
-                           <select
-                             value={panelForm.batch_id}
-                             disabled={panel.is_machine && (panel.net_out || 0) > 0}
-                             onChange={e => setPanelForm(f => ({ ...f, batch_id: e.target.value }))}
-                             style={inputStyle}
-                           >
-                             <option value="">-- Choose a batch --</option>
-                             {activeBatches.map(b => (
-                               <option key={b.id} value={b.id}>
-                                 {(b.batch_no || `#${b.id}`)} — In: {b.in_date || '—'} — Available: {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
-                               </option>
-                             ))}
-                           </select>
-                         )}
-                       </div>
-                     );
-                   })()}
-
-                   {panelForm.showFifo && (() => {
-                     const fifoSorted = [...panelBatches]
-                       .filter(b => parseFloat(b.remaining_qty) > 0)
-                       .sort((a, b) => new Date(a.in_date) - new Date(b.in_date));
-                     return fifoSorted.length === 0 ? (
-                       <p style={{ fontSize: 12, color: '#94a3b8', margin: '8px 0 0 4px' }}>No active batches found.</p>
-                     ) : (
-                       <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid #d1fae5' }}>
-                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                           <thead>
-                             <tr style={{ background: '#d1fae5', color: '#065f46' }}>
-                               <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>#</th>
-                               <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>Batch</th>
-                               <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>In Date</th>
-                               <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700 }}>Available</th>
-                             </tr>
-                           </thead>
-                           <tbody>
-                             {fifoSorted.map((b, i) => (
-                               <tr key={b.id} style={{ background: i === 0 ? '#f0fdf4' : '#fff', borderTop: '1px solid #d1fae5' }}>
-                                 <td style={{ padding: '6px 10px', color: i === 0 ? '#15803d' : '#64748b', fontWeight: i === 0 ? 700 : 400 }}>
-                                   {i === 0 ? '▶' : i + 1}
-                                 </td>
-                                 <td style={{ padding: '6px 10px', fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#15803d' : '#334155' }}>
-                                   {b.batch_no || `#${b.id}`}{i === 0 && <span style={{ marginLeft: 6, fontSize: 10, background: '#15803d', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>NEXT</span>}
-                                 </td>
-                                 <td style={{ padding: '6px 10px', color: '#64748b' }}>{b.in_date || '—'}</td>
-                                 <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600, color: i === 0 ? '#15803d' : '#334155' }}>
-                                   {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
-                                 </td>
-                               </tr>
-                             ))}
-                           </tbody>
-                         </table>
-                       </div>
-                     );
-                   })()}
-                 </div>
+                {/* Form fields */}
+
+                {panel.is_machine && (panel.net_out || 0) > 0 && (
+
+                  <div style={{
+
+                    background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: 10,
+
+                    padding: '12px 16px', color: '#dc2626', fontWeight: 600, fontSize: 13,
+
+                    marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8
+
+                  }}>
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+
+                    Return existing tool first ({panel.net_out} unit{(panel.net_out > 1) ? 's' : ''} outstanding)
+
+                  </div>
+
+                )}
+
+
+
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0fdf4', padding: '8px 12px', borderRadius: 8, border: '1px solid #bbf7d0', cursor: 'pointer' }}
+                    onClick={() => setPanelForm(f => ({ ...f, showFifo: !f.showFifo, batch_id: "" }))}>
+                    <input
+                      type="checkbox"
+                      id="showFifoBatches"
+                      checked={!!panelForm.showFifo}
+                      onChange={() => { }}
+                      style={{ cursor: 'pointer', width: 15, height: 15, accentColor: '#15803d' }}
+                    />
+                    <label htmlFor="showFifoBatches" style={{ fontSize: 13, fontWeight: 600, color: '#15803d', cursor: 'pointer', margin: 0 }}>
+                      Auto-select Batch
+                    </label>
+                  </div>
+
+                  {!panelForm.showFifo && (() => {
+                    const activeBatches = [...panelBatches]
+                      .filter(b => parseFloat(b.remaining_qty) > 0)
+                      .sort((a, b) => new Date(a.in_date) - new Date(b.in_date));
+                    return (
+                      <div style={{ marginTop: 8 }}>
+                        <label style={labelStyle}>Select Batch</label>
+                        {activeBatches.length === 0 ? (
+                          <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0 4px' }}>No active batches found.</p>
+                        ) : (
+                          <select
+                            value={panelForm.batch_id}
+                            disabled={panel.is_machine && (panel.net_out || 0) > 0}
+                            onChange={e => setPanelForm(f => ({ ...f, batch_id: e.target.value }))}
+                            style={inputStyle}
+                          >
+                            <option value="">-- Choose a batch --</option>
+                            {activeBatches.map(b => (
+                              <option key={b.id} value={b.id}>
+                                {(b.batch_no || `#${b.id}`)} — In: {b.in_date || '—'} — Available: {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {panelForm.showFifo && (() => {
+                    const fifoSorted = [...panelBatches]
+                      .filter(b => parseFloat(b.remaining_qty) > 0)
+                      .sort((a, b) => new Date(a.in_date) - new Date(b.in_date));
+                    return fifoSorted.length === 0 ? (
+                      <p style={{ fontSize: 12, color: '#94a3b8', margin: '8px 0 0 4px' }}>No active batches found.</p>
+                    ) : (
+                      <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid #d1fae5' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                          <thead>
+                            <tr style={{ background: '#d1fae5', color: '#065f46' }}>
+                              <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>#</th>
+                              <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>Batch</th>
+                              <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>In Date</th>
+                              <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700 }}>Available</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {fifoSorted.map((b, i) => (
+                              <tr key={b.id} style={{ background: i === 0 ? '#f0fdf4' : '#fff', borderTop: '1px solid #d1fae5' }}>
+                                <td style={{ padding: '6px 10px', color: i === 0 ? '#15803d' : '#64748b', fontWeight: i === 0 ? 700 : 400 }}>
+                                  {i === 0 ? '▶' : i + 1}
+                                </td>
+                                <td style={{ padding: '6px 10px', fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#15803d' : '#334155' }}>
+                                  {b.batch_no || `#${b.id}`}{i === 0 && <span style={{ marginLeft: 6, fontSize: 10, background: '#15803d', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>NEXT</span>}
+                                </td>
+                                <td style={{ padding: '6px 10px', color: '#64748b' }}>{b.in_date || '—'}</td>
+                                <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600, color: i === 0 ? '#15803d' : '#334155' }}>
+                                  {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
 
 
 
-                 <div style={{ marginBottom: 12 }}>
+                <div style={{ marginBottom: 12 }}>
 
-                   <label style={labelStyle}>Release To (Employee)</label>
+                  <label style={labelStyle}>Release To (Employee)</label>
 
-                   <input
-                     list="ww-employee-options"
-                     value={panelForm.employee_display}
-                     disabled={panel.is_machine && (panel.net_out || 0) > 0}
-                     onChange={e => {
-                       const val = e.target.value;
-                       const match = employees.find(
-                         emp => `${emp.employee_uav_id} — ${emp.fullname}` === val
-                       );
-                       setPanelForm(f => ({
-                         ...f,
-                         employee_display: val,
-                         employee_user_id: match ? (match.id || match.user_id) : "",
-                         employee_uav_id: match ? match.employee_uav_id : "",
-                         employee_name: match ? match.fullname : "",
-                       }));
-                     }}
-                     placeholder="Search employee ID or name…"
-                     style={inputStyle}
-                   />
-                   <datalist id="ww-employee-options">
-                     {employees.map(emp => (
-                       <option key={emp.id || emp.user_id} value={`${emp.employee_uav_id} — ${emp.fullname}`} />
-                     ))}
-                   </datalist>
-                   {panelForm.employee_user_id && (
-                     <p style={{ fontSize: 12, color: '#16a34a', marginTop: 6, marginBottom: 0 }}>
-                       ✓ {panelForm.employee_uav_id} — {panelForm.employee_name}
-                     </p>
-                   )}
-                 </div>
+                  <input
+                    list="ww-employee-options"
+                    value={panelForm.employee_display}
+                    disabled={panel.is_machine && (panel.net_out || 0) > 0}
+                    onChange={e => {
+                      const val = e.target.value;
+                      const match = employees.find(
+                        emp => `${emp.employee_uav_id} — ${emp.fullname}` === val
+                      );
+                      setPanelForm(f => ({
+                        ...f,
+                        employee_display: val,
+                        employee_user_id: match ? (match.id || match.user_id) : "",
+                        employee_uav_id: match ? match.employee_uav_id : "",
+                        employee_name: match ? match.fullname : "",
+                      }));
+                    }}
+                    placeholder="Search employee ID or name…"
+                    style={inputStyle}
+                  />
+                  <datalist id="ww-employee-options">
+                    {employees.map(emp => (
+                      <option key={emp.id || emp.user_id} value={`${emp.employee_uav_id} — ${emp.fullname}`} />
+                    ))}
+                  </datalist>
+                  {panelForm.employee_user_id && (
+                    <p style={{ fontSize: 12, color: '#16a34a', marginTop: 6, marginBottom: 0 }}>
+                      ✓ {panelForm.employee_uav_id} — {panelForm.employee_name}
+                    </p>
+                  )}
+                </div>
 
 
 
-                 <div style={{ marginBottom: 12 }}>
+                <div style={{ marginBottom: 12 }}>
 
-                   <label style={labelStyle}>Withdrawal Amount ({panel.unit || 'pcs'})</label>
+                  <label style={labelStyle}>Withdrawal Amount ({panel.unit || 'pcs'})</label>
 
-                   <input
+                  <input
 
-                     type="number"
+                    type="number"
 
-                     min="0.01"
+                    min="0.01"
 
-                     step="0.01"
+                    step="0.01"
 
-                     value={panelForm.amount}
+                    value={panelForm.amount}
 
-                     disabled={panel.is_machine && (panel.net_out || 0) > 0}
+                    disabled={panel.is_machine && (panel.net_out || 0) > 0}
 
-                     onChange={e => setPanelForm(f => ({ ...f, amount: e.target.value }))}
+                    onChange={e => setPanelForm(f => ({ ...f, amount: e.target.value }))}
 
-                     placeholder={panel.is_machine && (panel.net_out || 0) > 0 ? "Withdrawal blocked" : `Max: ${Math.abs(parseFloat(panel.quantity))} ${panel.unit || 'pcs'}`}
+                    placeholder={panel.is_machine && (panel.net_out || 0) > 0 ? "Withdrawal blocked" : `Max: ${Math.abs(parseFloat(panel.quantity))} ${panel.unit || 'pcs'}`}
 
-                     style={inputStyle}
+                    style={inputStyle}
 
-                   />
+                  />
 
-                 </div>
+                </div>
 
 
 
-                 <div style={{ marginBottom: 12 }}>
+                <div style={{ marginBottom: 12 }}>
 
-                   <label style={labelStyle}>Remarks</label>
+                  <label style={labelStyle}>Remarks</label>
 
-                   <textarea
+                  <textarea
 
-                     value={panelForm.remarks}
+                    value={panelForm.remarks}
 
-                     disabled={panel.is_machine && (panel.net_out || 0) > 0}
+                    disabled={panel.is_machine && (panel.net_out || 0) > 0}
 
-                     onChange={e => setPanelForm(f => ({ ...f, remarks: e.target.value }))}
+                    onChange={e => setPanelForm(f => ({ ...f, remarks: e.target.value }))}
 
-                     placeholder="e.g: Broken during use, Emergency request..."
+                    placeholder="e.g: Broken during use, Emergency request..."
 
-                     style={{ ...inputStyle, height: 60, resize: 'none' }}
+                    style={{ ...inputStyle, height: 60, resize: 'none' }}
 
-                   />
+                  />
 
-                 </div>
+                </div>
 
 
 
-                 <div style={{ marginBottom: 12 }}>
+                <div style={{ marginBottom: 12 }}>
 
-                   <label style={labelStyle}>Condition</label>
+                  <label style={labelStyle}>Condition</label>
 
-                   <select value={panelForm.condition} disabled={panel.is_machine && (panel.net_out || 0) > 0} onChange={e => setPanelForm(f => ({ ...f, condition: e.target.value }))} style={inputStyle}>
+                  <select value={panelForm.condition} disabled={panel.is_machine && (panel.net_out || 0) > 0} onChange={e => setPanelForm(f => ({ ...f, condition: e.target.value }))} style={inputStyle}>
 
-                     <option value="Good">Good Condition</option>
+                    <option value="Good">Good Condition</option>
 
-                     <option value="Damaged">Damaged</option>
+                    <option value="Damaged">Damaged</option>
 
-                     <option value="Wear & Tear">Wear &amp; Tear</option>
+                    <option value="Wear & Tear">Wear &amp; Tear</option>
 
-                     <option value="Requires Maintenance">Requires Maintenance</option>
+                    <option value="Requires Maintenance">Requires Maintenance</option>
 
-                     <option value="End of Life">End of Life</option>
+                    <option value="End of Life">End of Life</option>
 
-                   </select>
+                  </select>
 
-                 </div>
+                </div>
 
 
 
-                 <div style={{ marginBottom: 20 }}>
+                <div style={{ marginBottom: 20 }}>
 
-                   <label style={labelStyle}>Category</label>
+                  <label style={labelStyle}>Category</label>
 
-                   <select value={panelForm.category} disabled={panel.is_machine && (panel.net_out || 0) > 0} onChange={e => setPanelForm(f => ({ ...f, category: e.target.value }))} style={inputStyle}>
+                  <select value={panelForm.category} disabled={panel.is_machine && (panel.net_out || 0) > 0} onChange={e => setPanelForm(f => ({ ...f, category: e.target.value }))} style={inputStyle}>
 
-                     <option value="Expendable">Expendable</option>
+                    <option value="Expendable">Expendable</option>
 
-                     <option value="Non-Expendable">Non-Expendable</option>
+                    <option value="Non-Expendable">Non-Expendable</option>
 
-                     <option value="Semi-Expendable">Semi-Expendable</option>
+                    <option value="Semi-Expendable">Semi-Expendable</option>
 
-                   </select>
+                  </select>
 
-                   <button
+                  <button
 
-                     onClick={handlePanelWithdraw}
+                    onClick={handlePanelWithdraw}
 
-                     disabled={panelSaving || (panel.is_machine && (panel.net_out || 0) > 0)}
+                    disabled={panelSaving || (panel.is_machine && (panel.net_out || 0) > 0)}
 
-                     style={{
+                    style={{
 
-                       width: '100%', padding: '13px', borderRadius: 12, border: 'none',
+                      width: '100%', padding: '13px', borderRadius: 12, border: 'none',
 
-                       background: panelSaving || (panel.is_machine && (panel.net_out || 0) > 0) ? '#cbd5e1' : '#e11d48',
+                      background: panelSaving || (panel.is_machine && (panel.net_out || 0) > 0) ? '#cbd5e1' : '#e11d48',
 
-                       color: '#fff', fontSize: 15, fontWeight: 700,
+                      color: '#fff', fontSize: 15, fontWeight: 700,
 
-                       cursor: panelSaving || (panel.is_machine && (panel.net_out || 0) > 0) ? 'not-allowed' : 'pointer',
+                      cursor: panelSaving || (panel.is_machine && (panel.net_out || 0) > 0) ? 'not-allowed' : 'pointer',
 
-                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
 
-                       transition: 'opacity 0.2s',
+                      transition: 'opacity 0.2s',
 
-                     }}
+                    }}
 
-                   >
+                  >
 
-                     {panelSaving ? "Processing..." : (panel.is_machine && (panel.net_out || 0) > 0) ? "WITHDRAWAL BLOCKED (RETURN TOOL)" : "✕ Confirm Withdrawal (-)"}
+                    {panelSaving ? "Processing..." : (panel.is_machine && (panel.net_out || 0) > 0) ? "WITHDRAWAL BLOCKED (RETURN TOOL)" : "✕ Confirm Withdrawal (-)"}
 
-                   </button>
+                  </button>
 
-                 </div>
+                </div>
 
 
 

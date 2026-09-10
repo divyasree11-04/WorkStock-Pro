@@ -6,13 +6,13 @@ import "../styles/AddProduct.css";
 
 
 const UNIT_OPTIONS = [
-  { label: "Nos / Pieces",     value: "nos",   symbol: "pcs" },
-  { label: "Meter (m)",        value: "m",     symbol: "m"   },
-  { label: "Kilogram (kg)",    value: "kg",    symbol: "kg"  },
-  { label: "Litres (L)",       value: "litres",symbol: "L"   },
-  { label: "Square Meter (m²)",value: "m2",    symbol: "m²"  },
-  { label: "Square Feet (ft²)",value: "sq_ft", symbol: "ft²" },
-  { label: "Milli Meters (mm)",value: "mm",    symbol: "mm"  },
+  { label: "Nos / Pieces", value: "nos", symbol: "pcs" },
+  { label: "Meter (m)", value: "m", symbol: "m" },
+  { label: "Kilogram (kg)", value: "kg", symbol: "kg" },
+  { label: "Litres (L)", value: "litres", symbol: "L" },
+  { label: "Square Meter (m²)", value: "m2", symbol: "m²" },
+  { label: "Square Feet (ft²)", value: "sq_ft", symbol: "ft²" },
+  { label: "Milli Meters (mm)", value: "mm", symbol: "mm" },
 ];
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -24,25 +24,25 @@ const formatINR = (n) =>
   }).format(n || 0);
 
 const emptyForm = () => ({
-  item_name:   "",
-  category:    "C",
-  sde:         "S",
-  fsn:         "F",
-  date:        today(),
-  incharge:    "",
+  item_name: "",
+  category: "C",
+  sde: "S",
+  fsn: "F",
+  date: today(),
+  incharge: "",
   description: "",
 });
 
 
 export default function AddProduct() {
-  const navigate     = useNavigate();
-  const debounceRef  = useRef(null);
+  const navigate = useNavigate();
+  const debounceRef = useRef(null);
 
-  const [form,          setForm]          = useState(emptyForm);
-  const [previewCode,   setPreviewCode]   = useState("UTPLE001");
-  const [previewLoading,setPreviewLoading]= useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [previewCode, setPreviewCode] = useState("UTPLE001");
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
-  const [submitted,     setSubmitted]     = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const fetchPreview = useCallback(async () => {
     setPreviewLoading(true);
@@ -85,7 +85,7 @@ export default function AddProduct() {
 
   const totalValue = null;
 
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -101,7 +101,7 @@ export default function AddProduct() {
       return;
     }
 
-    
+
     let itemCode = previewCode;
     try {
       const res = await api.get("/products/next-item-code");
@@ -113,10 +113,10 @@ export default function AddProduct() {
         url: err.config?.url,
         message: err.message,
       });
-      
+
     }
 
-   
+
     if (itemCode.includes("?")) {
       const proceed = window.confirm(
         "Couldn't reach the item-code generator, so no real code could be " +
@@ -129,11 +129,11 @@ export default function AddProduct() {
 
     const payload = {
       ...form,
-      item_code:   itemCode,
-      quantity:    0,
-      unit_price:  0,
+      item_code: itemCode,
+      quantity: 0,
+      unit_price: 0,
       total_price: 0,
-      uom:         "",
+      uom: "",
     };
 
     try {
@@ -149,7 +149,7 @@ export default function AddProduct() {
     }
   };
 
-  
+
   const handleReset = () => {
     const fresh = { ...emptyForm() };
     setForm(fresh);
@@ -170,12 +170,12 @@ export default function AddProduct() {
     }
   };
 
-  
+
   return (
     <div className="ap-shell">
       <main className="ap-main">
 
-       
+
         <div className="ap-page-head">
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <button
@@ -199,7 +199,7 @@ export default function AddProduct() {
           </div>
         </div>
 
-        
+
         <div style={{
           display: "flex", alignItems: "center", gap: 16,
           background: "linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)",
@@ -207,8 +207,10 @@ export default function AddProduct() {
           boxShadow: "0 4px 20px rgba(15,23,42,0.25)",
         }}>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700,
-              textTransform: "uppercase", letterSpacing: "1px", color: "#94a3b8" }}>
+            <p style={{
+              margin: 0, fontSize: 11, fontWeight: 700,
+              textTransform: "uppercase", letterSpacing: "1px", color: "#94a3b8"
+            }}>
               Item Code Preview
             </p>
             <div style={{
@@ -227,8 +229,10 @@ export default function AddProduct() {
             background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)",
             borderRadius: 10, padding: "10px 16px", textAlign: "center",
           }}>
-            <p style={{ margin: 0, fontSize: 10, color: "#64748b",
-              textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 700 }}>Entry Date</p>
+            <p style={{
+              margin: 0, fontSize: 10, color: "#64748b",
+              textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 700
+            }}>Entry Date</p>
             <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
               {form.date}
             </p>
@@ -237,7 +241,7 @@ export default function AddProduct() {
 
         <form className="ap-form" onSubmit={handleSubmit} noValidate>
 
-         
+
           <div className="ap-card" style={{ padding: "32px", borderRadius: "16px" }}>
             <div style={{ textAlign: "center", marginBottom: "32px" }}>
               <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", letterSpacing: "0.5px" }}>Item Registration Details</h2>
@@ -300,7 +304,7 @@ export default function AddProduct() {
                 </select>
               </div>
 
-             
+
               <div className="ap-field">
                 <label>Registered By (EmpID - Name)</label>
                 <input
@@ -314,7 +318,7 @@ export default function AddProduct() {
               {/* The fields for Quantity, Unit, Price, Min/Critical Stock have been moved to Batch Creation */}
             </div>
 
-          
+
             {totalValue !== null && (
               <div style={{
                 marginTop: 24, padding: "16px 20px",
@@ -324,8 +328,10 @@ export default function AddProduct() {
               }}>
                 <span style={{ fontSize: 24 }}></span>
                 <div>
-                  <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 700,
-                    textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  <span style={{
+                    fontSize: 12, color: "#16a34a", fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.5px"
+                  }}>
                     Total Stock Value
                   </span>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", marginTop: 2 }}>
@@ -339,7 +345,7 @@ export default function AddProduct() {
             )}
           </div>
 
-          
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 16 }}>
             <button
               type={submitted ? "button" : "submit"}
@@ -382,9 +388,11 @@ export default function AddProduct() {
               textAlign: "center",
               animation: "fadeIn 0.4s ease",
             }}>
-              <p style={{ margin: 0, fontSize: 12, color: "#94a3b8",
-                letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700 }}>
-                 Item Registered — Generated Code
+              <p style={{
+                margin: 0, fontSize: 12, color: "#94a3b8",
+                letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700
+              }}>
+                Item Registered — Generated Code
               </p>
               <div style={{
                 fontSize: 38, fontWeight: 900, letterSpacing: 6, marginTop: 14,

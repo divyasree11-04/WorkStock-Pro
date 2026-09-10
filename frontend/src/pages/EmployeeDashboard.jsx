@@ -21,8 +21,8 @@ export default function EmployeeDashboard() {
   const empName = payload.name || "Employee";
   const empCode = payload.code || "";
   const isAdmin = payload.role && (
-    payload.role.toLowerCase() === "admin" || 
-    payload.role.toLowerCase() === "super_admin" || 
+    payload.role.toLowerCase() === "admin" ||
+    payload.role.toLowerCase() === "super_admin" ||
     payload.role.toLowerCase() === "superadmin"
   );
 
@@ -89,12 +89,14 @@ export default function EmployeeDashboard() {
   };
 
   if (loading) return <div className="ed-container ed-center"><div className="ed-spinner" /><p>Loading...</p></div>;
-  if (error)   return <div className="ed-container ed-center"><p className="ed-err">{error}</p></div>;
-  if (!data)   return <div className="ed-container ed-center"><p className="ed-err">Session expired. Please login.</p></div>;
+  if (error) return <div className="ed-container ed-center"><p className="ed-err">{error}</p></div>;
+  if (!data) return <div className="ed-container ed-center"><p className="ed-err">Session expired. Please login.</p></div>;
 
-  const items = tab === "withdrawals" ? data.withdrawals : data.deposits;
+  const withdrawals = Array.isArray(data?.withdrawals) ? data.withdrawals : [];
+  const deposits = Array.isArray(data?.deposits) ? data.deposits : [];
+  const items = tab === "withdrawals" ? withdrawals : deposits;
   const filtered = items.filter(w => w.item_name?.toLowerCase().includes(search.toLowerCase()));
-  const totalValue = data.withdrawals.reduce(
+  const totalValue = withdrawals.reduce(
     (s, w) => s + (parseFloat(w.quantity || 0) * parseFloat(w.unit_price || 0)), 0
   );
 
@@ -110,8 +112,8 @@ export default function EmployeeDashboard() {
         </div>
         <div className="ed-stats-grid">
           {[
-            { val: data.withdrawals.length,   lbl: "Orders" },
-            { val: data.totalWithdrawn,        lbl: "Units" },
+            { val: withdrawals.length, lbl: "Orders" },
+            { val: data?.totalWithdrawn || 0, lbl: "Units" },
             { val: `₹${totalValue.toFixed(0)}`, lbl: "Value" },
           ].map(({ val, lbl }) => (
             <div key={lbl} className="ed-stat-card">
@@ -128,14 +130,14 @@ export default function EmployeeDashboard() {
           onClick={() => navigate("/withdraw")}
           style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px", background: "#1d4ed8", color: "#fff", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: 600, fontSize: "14px" }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
           Withdraw Item
         </button>
         <button
           onClick={() => navigate("/return")}
           style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px", background: "#ea580c", color: "#fff", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: 600, fontSize: "14px" }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></svg>
           Return Item
         </button>
       </div>
@@ -170,11 +172,11 @@ export default function EmployeeDashboard() {
               <div className="ed-row-main">
                 <div className={`ed-icon-box ${suffix}`}>
                   {isWithdrawal ? (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                   ) : isReturn ? (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></svg>
                   ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                   )}
                 </div>
 
@@ -203,8 +205,8 @@ export default function EmployeeDashboard() {
                 {isWithdrawal && (
                   <button className={`btn-toggle-return ${r.open ? "open" : "closed"}`} onClick={() => toggleReturn(item.id)}>
                     {r.open
-                      ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                      ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></svg>
                     }
                   </button>
                 )}

@@ -15,8 +15,8 @@ export default function ProductDetails() {
   const [showAddQty, setShowAddQty] = useState(false);
   const [addingQty, setAddingQty] = useState(false);
   const [qtyForm, setQtyForm] = useState({
-    quantity: "", entry_date: "", unit_price: "", make: "", incharge: "", 
-    rack: "", lead_time: "", min_stock: "", safety_stock: "", 
+    quantity: "", entry_date: "", unit_price: "", make: "", incharge: "",
+    rack: "", lead_time: "", min_stock: "", safety_stock: "",
     reorder_quantity: "", warranty_expiry: "", service_days: "", remarks: ""
   });
 
@@ -40,7 +40,7 @@ export default function ProductDetails() {
         api.get(`/reports/transactions/${id}`)
       ]);
       setProduct(prodRes.data);
-      setHistory(histRes.data);
+      setHistory(Array.isArray(histRes.data) ? histRes.data : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -100,10 +100,10 @@ export default function ProductDetails() {
     }
     setAddingMaintenance(true);
     try {
-      await api.post("/maintenance", { 
-        productId: product.id, 
-        remarks: maintenanceForm.remarks, 
-        quantity: qty 
+      await api.post("/maintenance", {
+        productId: product.id,
+        remarks: maintenanceForm.remarks,
+        quantity: qty
       });
       setShowMaintenanceModal(false);
       setMaintenanceForm({ quantity: 1, remarks: "" });
@@ -136,8 +136,8 @@ export default function ProductDetails() {
   return (
     <div className="pd-container">
       <div className="pd-header">
-        <button 
-          className="btn-back" 
+        <button
+          className="btn-back"
           onClick={() => navigate('/products')}
           style={{ padding: "6px 12px", fontSize: "12px", borderRadius: "6px", background: "#f1f5f9", color: "#1e293b", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: "600" }}
         >
@@ -211,59 +211,59 @@ export default function ProductDetails() {
             <h3>QR Reference</h3>
             <QRCodeSVG value={`${window.location.origin}/withdraw/${product.id}`} size={150} />
             <p>Scan to Stock-In/Out</p>
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                <button 
-                  onClick={() => {
-                    if (!hasSmsWritePermission("sms_stock_in")) {
-                      alert("No permissions");
-                      return;
-                    }
-                    handleOpenAddQty();
-                  }}
-                  style={{
-                    padding: '6px 16px', 
-                    background: '#10b981', color: '#fff', border: 'none', 
-                    borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px',
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = '#059669'}
-                  onMouseOut={(e) => e.currentTarget.style.background = '#10b981'}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Add Quantity
-                </button>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+              <button
+                onClick={() => {
+                  if (!hasSmsWritePermission("sms_stock_in")) {
+                    alert("No permissions");
+                    return;
+                  }
+                  handleOpenAddQty();
+                }}
+                style={{
+                  padding: '6px 16px',
+                  background: '#10b981', color: '#fff', border: 'none',
+                  borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '13px',
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#059669'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#10b981'}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Quantity
+              </button>
+            </div>
           </div>
 
           <div className={`pd-card pd-warranty-card war-${warranty.class}`}>
-  <h3>Machine Warranty</h3>
-  <div className="pd-war-label">{warranty.label}</div>
-  <p style={{ fontSize: '0.9rem', color: '#64748b', margin: '4px 0' }}>
-    Expires: <strong style={{ color: '#1e293b' }}>{product.warranty_expiry ? new Date(product.warranty_expiry).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong>
-  </p>
-  <div className="pd-maintenance">
-    <label>Last Maintenance: </label>
-    <span style={{ display: 'block', marginTop: '4px', fontSize: '0.95rem', color: '#334155' }}>
-      {product.last_maintenance ? new Date(product.last_maintenance).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : 'Never'}
-    </span>
-  </div>
-  <button 
-    className="btn-maintenance" 
-    onClick={() => {
-      if (!hasSmsWritePermission("sms_master_list")) {
-        alert("No permissions");
-        return;
-      }
-      setShowMaintenanceModal(true);
-    }}
-  >
-     Log Maintenance
-  </button>
-</div>
+            <h3>Machine Warranty</h3>
+            <div className="pd-war-label">{warranty.label}</div>
+            <p style={{ fontSize: '0.9rem', color: '#64748b', margin: '4px 0' }}>
+              Expires: <strong style={{ color: '#1e293b' }}>{product.warranty_expiry ? new Date(product.warranty_expiry).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong>
+            </p>
+            <div className="pd-maintenance">
+              <label>Last Maintenance: </label>
+              <span style={{ display: 'block', marginTop: '4px', fontSize: '0.95rem', color: '#334155' }}>
+                {product.last_maintenance ? new Date(product.last_maintenance).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : 'Never'}
+              </span>
+            </div>
+            <button
+              className="btn-maintenance"
+              onClick={() => {
+                if (!hasSmsWritePermission("sms_master_list")) {
+                  alert("No permissions");
+                  return;
+                }
+                setShowMaintenanceModal(true);
+              }}
+            >
+              Log Maintenance
+            </button>
+          </div>
         </div>
       </div>
 
@@ -277,41 +277,41 @@ export default function ProductDetails() {
             background: '#fff', padding: '24px', borderRadius: '16px',
             width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}>
-            <button 
-              style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }} 
+            <button
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
               onClick={() => setShowMaintenanceModal(false)}
             >✕</button>
             <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>Log Maintenance</h2>
-            
+
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
                 Quantity Maintained *
               </label>
-              <input 
-                type="number" min="1" value={maintenanceForm.quantity} 
+              <input
+                type="number" min="1" value={maintenanceForm.quantity}
                 onChange={e => setMaintenanceForm(f => ({ ...f, quantity: e.target.value }))}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} 
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
-            
+
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
                 Maintenance Details/Remarks
               </label>
-              <textarea 
-                value={maintenanceForm.remarks} 
+              <textarea
+                value={maintenanceForm.remarks}
                 onChange={e => setMaintenanceForm(f => ({ ...f, remarks: e.target.value }))}
                 rows="3"
                 placeholder="Describe maintenance performed..."
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box', resize: 'none' }} 
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box', resize: 'none' }}
               />
             </div>
 
-            <button 
+            <button
               onClick={submitMaintenance} disabled={addingMaintenance}
               style={{
-                width: '100%', padding: '14px', 
-                background: '#0ea5e9', color: '#fff', border: 'none', 
+                width: '100%', padding: '14px',
+                background: '#0ea5e9', color: '#fff', border: 'none',
                 borderRadius: '8px', fontWeight: 'bold', cursor: addingMaintenance ? 'not-allowed' : 'pointer',
                 transition: 'background 0.2s'
               }}>
@@ -357,7 +357,7 @@ export default function ProductDetails() {
       </div>
 
       <div style={{ padding: "20px", display: "flex", justifyContent: "center" }}>
-        
+
       </div>
 
       {showAddQty && (
@@ -371,21 +371,21 @@ export default function ProductDetails() {
             width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto',
             position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}>
-            <button 
-              style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }} 
+            <button
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
               onClick={() => setShowAddQty(false)}
             >✕</button>
             <h2 style={{ marginTop: 0, marginBottom: '20px', fontSize: '20px' }}>Add Quantity & Update Item</h2>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Quantity to Add *
                 </label>
-                <input 
-                  type="number" min="0.01" step="0.01" value={qtyForm.quantity} 
+                <input
+                  type="number" min="0.01" step="0.01" value={qtyForm.quantity}
                   onChange={e => setQtyForm(f => ({ ...f, quantity: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #10b981', background: '#f0fdf4', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '2px solid #10b981', background: '#f0fdf4', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
 
@@ -406,10 +406,10 @@ export default function ProductDetails() {
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>
                     {f.label}
                   </label>
-                  <input 
-                    type={f.type} value={qtyForm[f.key]} 
+                  <input
+                    type={f.type} value={qtyForm[f.key]}
                     onChange={e => setQtyForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} 
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
               ))}
@@ -419,20 +419,20 @@ export default function ProductDetails() {
                   Remarks (Vendor/Ref)
                 </label>
 
-                <input 
-                  type="text" value={qtyForm.remarks} 
+                <input
+                  type="text" value={qtyForm.remarks}
                   onChange={e => setQtyForm(f => ({ ...f, remarks: e.target.value }))}
                   placeholder="Vendor name, batch no..."
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
             </div>
 
-            <button 
+            <button
               onClick={submitAddQty} disabled={addingQty}
               style={{
-                marginTop: '20px', width: '100%', padding: '14px', 
-                background: '#0f172a', color: '#fff', border: 'none', 
+                marginTop: '20px', width: '100%', padding: '14px',
+                background: '#0f172a', color: '#fff', border: 'none',
                 borderRadius: '8px', fontWeight: 'bold', cursor: addingQty ? 'not-allowed' : 'pointer'
               }}>
               {addingQty ? "Processing..." : "Confirm & Save"}
