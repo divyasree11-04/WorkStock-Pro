@@ -285,7 +285,7 @@ router.post(
          VALUES ($1, $2, 'IN', $3, $4, $5)`,
         [
           productId,
-          req.user.id,
+          req.user.id || req.user.employee_id,
           acceptedQty,
           `Batch refill \u2013 ${batch_no} (GRN: ${finalGRN})`,
           batch.id

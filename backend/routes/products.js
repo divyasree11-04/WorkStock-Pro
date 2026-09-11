@@ -344,7 +344,7 @@ router.get("/", verifyToken, async (req, res) => {
         SELECT
           product_id,
           COALESCE(SUM(total_qty * unit_price), 0)      AS stock_value,
-          COALESCE(SUM(accepted_qty * unit_price), 0)   AS current_stock_value
+          COALESCE(SUM(remaining_qty * unit_price), 0)  AS current_stock_value
         FROM batches
         GROUP BY product_id
       `);

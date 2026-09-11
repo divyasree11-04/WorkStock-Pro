@@ -117,7 +117,7 @@ export default function ReturnWorkflow() {
     }
     setPanelSaving(true);
     try {
-      await api.post("/reports/return", {
+      await api.post("/return", {
         productId: panel.id,
         quantity: qty,
         remarks: panelForm.remarks || "Item returned to store"

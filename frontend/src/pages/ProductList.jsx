@@ -276,18 +276,20 @@ function BatchListModal({ item, onClose }) {
                 <th style={thSm}>Expire</th>
                 <th style={thSm}>Condition</th>
                 <th style={thSm}>Total / Accepted / Rejected</th>
+                <th style={thSm}>Remaining</th>
                 <th style={thSm}>Unit Price</th>
               </tr>
             </thead>
             <tbody>
               {sorted.map((b) => (
-                <tr key={b.batch_no} style={{ borderBottom: "1px solid #eef2f7" }}>
+                <tr key={b.batch_no || b.id} style={{ borderBottom: "1px solid #eef2f7" }}>
                   <td style={tdSm}>{item.item_code}-{b.batch_no}</td>
                   <td style={tdSm}>{b.vendor}</td>
                   <td style={tdSm}>{formatDate(b.in_date)}</td>
                   <td style={tdSm}>{formatDate(b.expire_date)}</td>
                   <td style={tdSm}>{b.condition || '—'}</td>
                   <td style={tdSm}>{b.total_qty} / {b.accepted_qty} / {b.rejected_qty}</td>
+                  <td style={{ ...tdSm, fontWeight: 700, color: parseFloat(b.remaining_qty) > 0 ? "#16a34a" : "#dc2626" }}>{b.remaining_qty}</td>
                   <td style={tdSm}>₹{formatINR(b.unit_price)}</td>
                 </tr>
               ))}
