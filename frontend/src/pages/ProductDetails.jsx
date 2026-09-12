@@ -186,11 +186,11 @@ export default function ProductDetails() {
   return (
     <div className="pd-container">
       <div className="pd-header">
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
             className="btn-back"
             onClick={() => navigate('/products')}
-            style={{ padding: "6px 12px", fontSize: "12px", borderRadius: "6px", background: "#f1f5f9", color: "#1e293b", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: "600" }}
+            style={{ margin: 0, padding: "6px 12px", fontSize: "12px", borderRadius: "6px", background: "#f1f5f9", color: "#1e293b", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: "600" }}
           >
             ← Back
           </button>
@@ -207,7 +207,7 @@ export default function ProductDetails() {
         </div>
         <div className="pd-title-row">
           <h1>{product.item_name}</h1>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span className={`pd-category-badge cat-${product.category}`} title="ABC Category (Value)">Category {product.category}</span>
             <span className="pd-category-badge" style={{ background: '#ede9fe', color: '#8b5cf6', border: '1px solid #ddd6fe' }} title="SDE Category (Lead Time)">SDE: {product.sde || 'N/A'}</span>
             <span className="pd-category-badge" style={{ background: '#d1fae5', color: '#10b981', border: '1px solid #a7f3d0' }} title="FSN Category (Usage)">FSN: {product.fsn || 'N/A'}</span>
