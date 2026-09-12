@@ -24,6 +24,10 @@ export default function ProductDetails() {
   const [addingMaintenance, setAddingMaintenance] = useState(false);
   const [maintenanceForm, setMaintenanceForm] = useState({ quantity: 1, remarks: "" });
 
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(false);
+  const [editForm, setEditForm] = useState({});
+
   useEffect(() => {
     if (!id || isNaN(id)) {
       console.warn("[ProductDetails] fetchData called with invalid id:", id);
@@ -115,6 +119,52 @@ export default function ProductDetails() {
     }
   };
 
+  const handleOpenEdit = () => {
+    setEditForm({
+      item_name: product.item_name || "",
+      description: product.description || "",
+      make: product.make || "",
+      rack: product.rack || product.storage_id || "",
+      storage_id: product.storage_id || product.rack || "",
+      lead_time: product.lead_time || "",
+      unit: product.unit || "",
+      unit_price: product.unit_price || "",
+      category: product.category || "C",
+      sde: product.sde || "S",
+      fsn: product.fsn || "F",
+      min_stock: product.min_stock ?? "",
+      max_stock: product.max_stock ?? "",
+      safety_stock: product.safety_stock ?? "",
+      reorder_quantity: product.reorder_quantity ?? "",
+      warranty_expiry: product.warranty_expiry ? new Date(product.warranty_expiry).toISOString().slice(0, 10) : "",
+      is_machine: product.is_machine || false,
+      service_days: product.service_days || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const submitEdit = async () => {
+    if (!hasSmsWritePermission("sms_master_list")) {
+      alert("No permissions");
+      return;
+    }
+    setEditingProduct(true);
+    try {
+      const payload = {
+        ...editForm,
+        storage_id: editForm.rack || editForm.storage_id || "",
+        is_machine: editForm.is_machine,
+      };
+      await api.put(`/products/${id}`, payload);
+      setShowEditModal(false);
+      fetchData();
+    } catch (err) {
+      alert("Error updating product: " + (err.response?.data?.message || err.response?.data?.error || err.message));
+    } finally {
+      setEditingProduct(false);
+    }
+  };
+
   if (loading) return <div className="pd-loading">Loading Item Details...</div>;
   if (!product) return <div className="pd-error">Item not found.</div>;
 
@@ -136,13 +186,25 @@ export default function ProductDetails() {
   return (
     <div className="pd-container">
       <div className="pd-header">
-        <button
-          className="btn-back"
-          onClick={() => navigate('/products')}
-          style={{ padding: "6px 12px", fontSize: "12px", borderRadius: "6px", background: "#f1f5f9", color: "#1e293b", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: "600" }}
-        >
-          ← Back
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            className="btn-back"
+            onClick={() => navigate('/products')}
+            style={{ padding: "6px 12px", fontSize: "12px", borderRadius: "6px", background: "#f1f5f9", color: "#1e293b", border: "1px solid #cbd5e1", cursor: "pointer", fontWeight: "600" }}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={handleOpenEdit}
+            style={{
+              padding: "6px 14px", fontSize: "12px", borderRadius: "6px",
+              background: "#0f172a", color: "#fff", border: "none",
+              cursor: "pointer", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: 6
+            }}
+          >
+            ✏️ Edit Details
+          </button>
+        </div>
         <div className="pd-title-row">
           <h1>{product.item_name}</h1>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -321,6 +383,240 @@ export default function ProductDetails() {
         </div>
       )}
 
+      {/* Edit Details Modal */}
+      {showEditModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        }}>
+          <div style={{
+            background: '#fff', padding: '28px', borderRadius: '16px',
+            width: '90%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto',
+            position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)'
+          }}>
+            <button
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
+              onClick={() => setShowEditModal(false)}
+            >✕</button>
+            <h2 style={{ marginTop: 0, marginBottom: '6px', fontSize: '20px', color: '#0f172a' }}>Edit Item Details</h2>
+            <p style={{ margin: '0 0 20px', fontSize: '13px', color: '#64748b' }}>Update master data fields — stock quantity is unchanged</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+
+              {/* Item Name */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={lbl}>Item Name</label>
+                <input
+                  value={editForm.item_name}
+                  onChange={e => setEditForm(f => ({ ...f, item_name: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Make */}
+              <div>
+                <label style={lbl}>Make / Brand</label>
+                <input
+                  value={editForm.make}
+                  placeholder="e.g. Generic, Bosch"
+                  onChange={e => setEditForm(f => ({ ...f, make: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Rack / Storage */}
+              <div>
+                <label style={lbl}>Rack / Storage ID</label>
+                <input
+                  value={editForm.rack}
+                  placeholder="e.g. A-101"
+                  onChange={e => setEditForm(f => ({ ...f, rack: e.target.value, storage_id: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Lead Time */}
+              <div>
+                <label style={lbl}>Lead Time (Days)</label>
+                <input
+                  type="number" min="0"
+                  value={editForm.lead_time}
+                  onChange={e => setEditForm(f => ({ ...f, lead_time: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Warranty Expiry */}
+              <div>
+                <label style={lbl}>Warranty Expiry Date</label>
+                <input
+                  type="date"
+                  value={editForm.warranty_expiry}
+                  onChange={e => setEditForm(f => ({ ...f, warranty_expiry: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* ABC */}
+              <div>
+                <label style={lbl}>ABC Category</label>
+                <select value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))} style={inp}>
+                  <option value="A">A – High Value</option>
+                  <option value="B">B – Medium Value</option>
+                  <option value="C">C – Low Value</option>
+                </select>
+              </div>
+
+              {/* SDE */}
+              <div>
+                <label style={lbl}>SDE Category</label>
+                <select value={editForm.sde} onChange={e => setEditForm(f => ({ ...f, sde: e.target.value }))} style={inp}>
+                  <option value="S">S – Scarce</option>
+                  <option value="D">D – Difficult</option>
+                  <option value="E">E – Easy</option>
+                </select>
+              </div>
+
+              {/* FSN */}
+              <div>
+                <label style={lbl}>FSN Category</label>
+                <select value={editForm.fsn} onChange={e => setEditForm(f => ({ ...f, fsn: e.target.value }))} style={inp}>
+                  <option value="F">F – Fast Moving</option>
+                  <option value="S">S – Slow Moving</option>
+                  <option value="N">N – Non Moving</option>
+                </select>
+              </div>
+
+              {/* Unit */}
+              <div>
+                <label style={lbl}>Unit of Measure</label>
+                <input
+                  value={editForm.unit}
+                  placeholder="e.g. nos, kg, m"
+                  onChange={e => setEditForm(f => ({ ...f, unit: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Unit Price */}
+              <div>
+                <label style={lbl}>Unit Price (₹)</label>
+                <input
+                  type="number" min="0" step="0.01"
+                  value={editForm.unit_price}
+                  onChange={e => setEditForm(f => ({ ...f, unit_price: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Min Stock */}
+              <div>
+                <label style={lbl}>Min Stock</label>
+                <input
+                  type="number" min="0"
+                  value={editForm.min_stock}
+                  onChange={e => setEditForm(f => ({ ...f, min_stock: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Max Stock */}
+              <div>
+                <label style={lbl}>Max Stock</label>
+                <input
+                  type="number" min="0"
+                  value={editForm.max_stock}
+                  onChange={e => setEditForm(f => ({ ...f, max_stock: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Safety Stock */}
+              <div>
+                <label style={lbl}>Safety Stock</label>
+                <input
+                  type="number" min="0"
+                  value={editForm.safety_stock}
+                  onChange={e => setEditForm(f => ({ ...f, safety_stock: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Reorder Qty */}
+              <div>
+                <label style={lbl}>Reorder Quantity</label>
+                <input
+                  type="number" min="0"
+                  value={editForm.reorder_quantity}
+                  onChange={e => setEditForm(f => ({ ...f, reorder_quantity: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Service Days */}
+              <div>
+                <label style={lbl}>Service Interval (Days)</label>
+                <input
+                  type="number" min="0"
+                  value={editForm.service_days}
+                  onChange={e => setEditForm(f => ({ ...f, service_days: e.target.value }))}
+                  style={inp}
+                />
+              </div>
+
+              {/* Is Machine */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+                <input
+                  type="checkbox"
+                  id="edit_is_machine"
+                  checked={editForm.is_machine}
+                  onChange={e => setEditForm(f => ({ ...f, is_machine: e.target.checked }))}
+                  style={{ width: 18, height: 18, cursor: 'pointer' }}
+                />
+                <label htmlFor="edit_is_machine" style={{ cursor: 'pointer', fontWeight: 600, color: '#1e293b', fontSize: '13px' }}>
+                  This item is a Machine / Equipment
+                </label>
+              </div>
+
+              {/* Description */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={lbl}>Description / Remarks</label>
+                <textarea
+                  value={editForm.description}
+                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  style={{ ...inp, resize: 'vertical' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+              <button
+                onClick={submitEdit}
+                disabled={editingProduct}
+                style={{
+                  flex: 1, padding: '13px', background: '#0f172a', color: '#fff',
+                  border: 'none', borderRadius: '8px', fontWeight: 'bold',
+                  cursor: editingProduct ? 'not-allowed' : 'pointer', transition: 'background 0.2s'
+                }}
+              >
+                {editingProduct ? 'Saving…' : '✓ Save Changes'}
+              </button>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{
+                  padding: '13px 24px', background: '#f1f5f9', color: '#334155',
+                  border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="pd-history-section">
         <h3>Transaction History (Audit Trail)</h3>
         <table className="pd-table">
@@ -443,3 +739,25 @@ export default function ProductDetails() {
     </div>
   );
 }
+
+// ─── Shared modal style constants ─────────────────────────────────────────────
+const lbl = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: '700',
+  color: '#64748b',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  marginBottom: '5px',
+};
+
+const inp = {
+  width: '100%',
+  padding: '10px 14px',
+  borderRadius: '8px',
+  border: '1px solid #cbd5e1',
+  outline: 'none',
+  boxSizing: 'border-box',
+  fontSize: '14px',
+  color: '#1e293b',
+};

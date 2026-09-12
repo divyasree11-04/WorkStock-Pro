@@ -250,7 +250,7 @@ router.post(
           unit || null,
           make || null,
           incharge || null,
-          rack || null,
+          rack || storage_id || null,
           lead_time || null,
           parseNum(unit_price, 0),
           finalItemCode,
@@ -263,7 +263,7 @@ router.post(
           parseNum(reorder_quantity),
           parseNum(safety_stock),
           parseNum(danger_level),
-          storage_id || null,
+          storage_id || rack || null,
           qr_reference || null,
           formatted_warranty_expiry,
           is_machine === "true" || is_machine === true || false,
@@ -401,6 +401,109 @@ router.get("/:id", verifyToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Update product master data
+router.put(
+  "/:id",
+  verifyToken,
+  upload.single("warranty_file"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const {
+        item_name, description, unit, make, incharge,
+        rack, lead_time, unit_price, category, sde, fsn, uom,
+        min_stock, max_stock, reorder_quantity, safety_stock,
+        danger_level, storage_id, qr_reference,
+        warranty_expiry, is_machine, service_days, warranty_drive_link
+      } = req.body;
+
+      const prodCheck = await pool.query("SELECT * FROM products WHERE id = $1", [id]);
+      if (prodCheck.rows.length === 0) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+
+      const oldProd = prodCheck.rows[0];
+      const finalRack = rack !== undefined && rack !== null ? rack : (storage_id !== undefined && storage_id !== null ? storage_id : oldProd.rack);
+      const finalStorageId = storage_id !== undefined && storage_id !== null ? storage_id : (rack !== undefined && rack !== null ? rack : oldProd.storage_id);
+      const formatted_warranty_expiry = warranty_expiry !== undefined
+        ? (warranty_expiry && warranty_expiry.trim() !== "" ? warranty_expiry : null)
+        : oldProd.warranty_expiry;
+      const warranty_file_path = req.file ? req.file.path : oldProd.warranty_file_path;
+
+      const qty = parseFloat(oldProd.quantity || 0);
+      const newMinStock = min_stock !== undefined ? parseNum(min_stock, 5) : oldProd.min_stock;
+      let status = oldProd.status;
+      if (qty === 0) status = "Out of Stock";
+      else if (qty < newMinStock) status = "Low Stock";
+      else status = "Available";
+
+      const updated = await pool.query(
+        `UPDATE products SET
+          item_name = COALESCE($1, item_name),
+          description = $2,
+          unit = COALESCE($3, unit),
+          make = $4,
+          incharge = $5,
+          rack = $6,
+          lead_time = $7,
+          unit_price = COALESCE($8, unit_price),
+          category = COALESCE($9, category),
+          sde = COALESCE($10, sde),
+          fsn = COALESCE($11, fsn),
+          uom = $12,
+          min_stock = $13,
+          max_stock = $14,
+          reorder_quantity = $15,
+          safety_stock = $16,
+          danger_level = $17,
+          storage_id = $18,
+          qr_reference = $19,
+          warranty_expiry = $20,
+          is_machine = $21,
+          status = $22,
+          warranty_file_path = $23,
+          warranty_drive_link = $24,
+          service_days = $25
+        WHERE id = $26
+        RETURNING *`,
+        [
+          item_name || oldProd.item_name,
+          description !== undefined ? description : oldProd.description,
+          unit || oldProd.unit,
+          make !== undefined ? make : oldProd.make,
+          incharge !== undefined ? incharge : oldProd.incharge,
+          finalRack,
+          lead_time !== undefined ? lead_time : oldProd.lead_time,
+          unit_price !== undefined ? parseNum(unit_price, oldProd.unit_price) : oldProd.unit_price,
+          category || oldProd.category,
+          sde || oldProd.sde,
+          fsn || oldProd.fsn,
+          uom !== undefined ? uom : oldProd.uom,
+          newMinStock,
+          max_stock !== undefined ? parseNum(max_stock) : oldProd.max_stock,
+          reorder_quantity !== undefined ? parseNum(reorder_quantity) : oldProd.reorder_quantity,
+          safety_stock !== undefined ? parseNum(safety_stock) : oldProd.safety_stock,
+          danger_level !== undefined ? parseNum(danger_level) : oldProd.danger_level,
+          finalStorageId,
+          qr_reference !== undefined ? qr_reference : oldProd.qr_reference,
+          formatted_warranty_expiry,
+          is_machine !== undefined ? (is_machine === "true" || is_machine === true) : oldProd.is_machine,
+          status,
+          warranty_file_path,
+          warranty_drive_link !== undefined ? warranty_drive_link : oldProd.warranty_drive_link,
+          service_days !== undefined ? service_days : oldProd.service_days,
+          id
+        ]
+      );
+
+      res.json({ success: true, product: updated.rows[0] });
+    } catch (err) {
+      console.error("Error updating product:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
 
 router.post("/:id/add-quantity", verifyToken, async (req, res) => {
   try {

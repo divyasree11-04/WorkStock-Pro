@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect, useRef } from "react";
 
 import { useParams, useLocation } from "react-router-dom";
@@ -11,6 +11,13 @@ import { api } from "../utils/api";
 import { isSmsReadOnly, hasSmsWritePermission } from "../utils/auth";
 import "../styles/WithdrawWorkflow.css";
 
+// Strip the raw ISO suffix (T00:00:00.000Z) from PostgreSQL DATE fields
+const formatDate = (val) => {
+  if (!val) return '—';
+  const d = val.includes('T') ? val.split('T')[0] : val; // "2026-09-12"
+  const [y, m, day] = d.split('-');
+  return `${day}-${m}-${y}`; // "12-09-2026"
+};
 
 
 export default function WithdrawWorkflow() {
@@ -618,7 +625,7 @@ export default function WithdrawWorkflow() {
                             <option value="">-- Choose a batch --</option>
                             {activeBatches.map(b => (
                               <option key={b.id} value={b.id}>
-                                {(b.batch_no || `#${b.id}`)} — In: {b.in_date || '—'} — Available: {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
+                                {(b.batch_no || `#${b.id}`)} — In: {formatDate(b.in_date)} — Available: {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
                               </option>
                             ))}
                           </select>
@@ -653,7 +660,7 @@ export default function WithdrawWorkflow() {
                                 <td style={{ padding: '6px 10px', fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#15803d' : '#334155' }}>
                                   {b.batch_no || `#${b.id}`}{i === 0 && <span style={{ marginLeft: 6, fontSize: 10, background: '#15803d', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>NEXT</span>}
                                 </td>
-                                <td style={{ padding: '6px 10px', color: '#64748b' }}>{b.in_date || '—'}</td>
+                                <td style={{ padding: '6px 10px', color: '#64748b' }}>{formatDate(b.in_date)}</td>
                                 <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600, color: i === 0 ? '#15803d' : '#334155' }}>
                                   {b.remaining_qty} {panel.unit || panel.uom || 'pcs'}
                                 </td>

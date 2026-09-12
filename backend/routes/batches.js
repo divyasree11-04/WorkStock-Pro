@@ -274,9 +274,29 @@ router.post(
       if (newQty <= 0) status = "Out of Stock";
       else if (newQty < reqMinStock) status = "Low Stock";
 
+      const newRack = storage_location && storage_location.trim() !== "" ? storage_location.trim() : null;
+      const newMake = make && make.trim() !== "" ? make.trim() : null;
+      const newLeadTime = lead_time ? String(lead_time) : null;
+      const newWarrantyExpiry = expire_date && expire_date.trim() !== "" ? expire_date.trim() : null;
+
       await client.query(
-        `UPDATE products SET quantity = $1, status = $2, min_stock = $3, danger_level = $4, unit = $5, unit_price = $6 WHERE id = $7`,
-        [newQty, status, reqMinStock, reqDangerLevel, reqUnit, reqUnitPrice, productId]
+        `UPDATE products SET 
+          quantity = $1, 
+          status = $2, 
+          min_stock = $3, 
+          danger_level = $4, 
+          unit = $5, 
+          unit_price = $6,
+          rack = COALESCE($8, rack),
+          storage_id = COALESCE($8, storage_id),
+          make = COALESCE($9, make),
+          lead_time = COALESCE($10, lead_time),
+          warranty_expiry = COALESCE($11, warranty_expiry)
+        WHERE id = $7`,
+        [
+          newQty, status, reqMinStock, reqDangerLevel, reqUnit, reqUnitPrice, productId,
+          newRack, newMake, newLeadTime, newWarrantyExpiry
+        ]
       );
 
       // Log stock_history IN record linked to this batch

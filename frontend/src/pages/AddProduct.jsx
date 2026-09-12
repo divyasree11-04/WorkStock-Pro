@@ -31,6 +31,14 @@ const emptyForm = () => ({
   date: today(),
   incharge: "",
   description: "",
+  rack: "",
+  make: "",
+  lead_time: "",
+  warranty_expiry: "",
+  is_machine: false,
+  min_stock: "5",
+  safety_stock: "0",
+  reorder_quantity: "0",
 });
 
 
@@ -78,8 +86,8 @@ export default function AddProduct() {
   }, [fetchPreview]);
 
   const set = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   };
 
 
@@ -134,6 +142,7 @@ export default function AddProduct() {
       unit_price: 0,
       total_price: 0,
       uom: "",
+      storage_id: form.rack || "",
     };
 
     try {
@@ -304,7 +313,6 @@ export default function AddProduct() {
                 </select>
               </div>
 
-
               <div className="ap-field">
                 <label>Registered By (EmpID - Name)</label>
                 <input
@@ -315,7 +323,105 @@ export default function AddProduct() {
                 />
               </div>
 
-              {/* The fields for Quantity, Unit, Price, Min/Critical Stock have been moved to Batch Creation */}
+              {/* Logistics & Storage inputs */}
+              <div className="ap-field">
+                <label>Rack / Storage ID</label>
+                <input
+                  name="rack"
+                  value={form.rack}
+                  onChange={set}
+                  placeholder="e.g. A-101 / Shelf-3"
+                />
+              </div>
+
+              <div className="ap-field">
+                <label>Make / Brand</label>
+                <input
+                  name="make"
+                  value={form.make}
+                  onChange={set}
+                  placeholder="e.g. Generic, Bosch, Havells"
+                />
+              </div>
+
+              <div className="ap-field">
+                <label>Lead Time (Days)</label>
+                <input
+                  type="number"
+                  name="lead_time"
+                  value={form.lead_time}
+                  onChange={set}
+                  placeholder="e.g. 7"
+                />
+              </div>
+
+              {/* Warranty & Machine info */}
+              <div className="ap-field">
+                <label>Machine Warranty Expiry</label>
+                <input
+                  type="date"
+                  name="warranty_expiry"
+                  value={form.warranty_expiry}
+                  onChange={set}
+                />
+              </div>
+
+              <div className="ap-field" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 24 }}>
+                <input
+                  type="checkbox"
+                  id="is_machine"
+                  name="is_machine"
+                  checked={form.is_machine}
+                  onChange={set}
+                  style={{ width: 18, height: 18, cursor: "pointer" }}
+                />
+                <label htmlFor="is_machine" style={{ cursor: "pointer", fontWeight: 600, color: "#1e293b", margin: 0 }}>
+                  This item is a Machine / Equipment
+                </label>
+              </div>
+
+              {/* Stock Control Levels */}
+              <div className="ap-field">
+                <label>Min Stock Threshold</label>
+                <input
+                  type="number"
+                  name="min_stock"
+                  value={form.min_stock}
+                  onChange={set}
+                />
+              </div>
+
+              <div className="ap-field">
+                <label>Safety Stock</label>
+                <input
+                  type="number"
+                  name="safety_stock"
+                  value={form.safety_stock}
+                  onChange={set}
+                />
+              </div>
+
+              <div className="ap-field">
+                <label>Reorder Quantity</label>
+                <input
+                  type="number"
+                  name="reorder_quantity"
+                  value={form.reorder_quantity}
+                  onChange={set}
+                />
+              </div>
+
+              <div className="ap-field" style={{ gridColumn: "1 / -1" }}>
+                <label>Item Description / Remarks</label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={set}
+                  rows={2}
+                  placeholder="Additional specifications or notes..."
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }}
+                />
+              </div>
             </div>
 
 
